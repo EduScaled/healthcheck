@@ -23,11 +23,13 @@ async def run_check(f: Callable, **kwargs):
     try:
         return await f(**kwargs)
     except Exception as e:
-        capture_exception(e)
+        print(e)
+        # capture_exception(e)
         return False
 
 
 async def healthcheck(_):
+    """
     start = int(time.time() * 1000)
     lrs_response, lrs_response_status = await create_lrs(
         settings.LRS_SERVER_URL, settings.LRS_AUTH, settings.UNTI_ID, settings.LRS_CULTURE_VALUE
@@ -51,11 +53,23 @@ async def healthcheck(_):
         'dp': await run_check(DPCheck().check, fs_messages=fs_messages)
     }
 
+    """
+
+    result = {
+        'dp:': await run_check(
+            DPCheck(settings.DP_SERVER_URL, settings.DP_SERVER_TOKEN, settings.UNTI_ID).check
+        )
+    }
+
+    # TODO
+    # 1. Если хотя бы одно из значений false - то отдавать 500
+    # 2. Почему факт не записывается, но fs-kafka отдает "true"?
+
     status = 200 if all(result.values()) else 500
     return web.json_response(result, status=status)
 
 
-def init_func(argv):
+def init_func():
     app = web.Application()
     app.add_routes([web.get('/healthcheck', healthcheck)])
     return app
