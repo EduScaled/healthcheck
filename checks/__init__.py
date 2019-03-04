@@ -36,7 +36,7 @@ async def _get_kafka_messages(topic: str, start: int) -> List[ConsumerRecord]:
 
         offsets = await consumer.offsets_for_times({tp: start for tp in tps})
         for tp, offset in offsets.items():
-            offset = offset.offset if offset else 1
+            offset = offset.offset if offset else (await consumer.end_offsets([tp]))[tp]
             consumer.seek(tp, offset)
 
         records = await consumer.getmany(*tps, timeout_ms=1000*60)
