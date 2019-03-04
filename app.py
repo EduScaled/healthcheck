@@ -1,4 +1,5 @@
 import time
+import random
 from typing import Callable
 import asyncio
 
@@ -28,9 +29,13 @@ async def run_check(f: Callable, **kwargs):
 
 
 async def healthcheck(_):
+    
     start = int(time.time() * 1000)
+    
+    lrs_culture_value = { settings.LRS_CULTURE_COMPETENCE: random.randint(200,300) }
+
     lrs_response, lrs_response_status = await create_lrs(
-        settings.LRS_SERVER_URL, settings.LRS_AUTH, settings.UNTI_ID, settings.LRS_CULTURE_VALUE
+        settings.LRS_SERVER_URL, settings.LRS_AUTH, settings.UNTI_ID, lrs_culture_value
     )
 
     await asyncio.sleep(5)
@@ -44,18 +49,27 @@ async def healthcheck(_):
         'lrs-kafka': await run_check(LrsKafkaCheck().check, start=start, lrs_response=lrs_response),
         'fs': await run_check(
             FSCheck(
-                settings.FS_SERVER_URL, settings.FS_SERVER_TOKEN, settings.LRS_CULTURE_VALUE
+                settings.FS_SERVER_URL, settings.FS_SERVER_TOKEN, lrs_culture_value
             ).check, fs_messages=fs_messages
         ),
         'fs-kafka': await run_check(FSKafkaCheck().check, fs_messages=fs_messages),
-        'dp': await run_check(DPCheck().check, fs_messages=fs_messages)
+        'dp:': await run_check(
+            DPCheck(
+                settings.DP_SERVER_URL, 
+                settings.DP_SERVER_TOKEN, 
+                settings.UNTI_ID,
+                settings.DP_COMPETENCE_UUID,
+                lrs_culture_value
+            ).check,
+            create_entry=settings.DP_CREATE_ENTRY
+        )
     }
 
     status = 200 if all(result.values()) else 500
     return web.json_response(result, status=status)
 
 
-def init_func(argv):
+def init_func():
     app = web.Application()
     app.add_routes([web.get('/healthcheck', healthcheck)])
     return app

@@ -1,0 +1,1 @@
+gunicorn "app:init_func()" -b 0.0.0.0:8080 -k aiohttp.GunicornWebWorker
