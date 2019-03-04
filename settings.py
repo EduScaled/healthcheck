@@ -8,7 +8,7 @@ class Settings:
     UNTI_ID = os.getenv('UNTI_ID')
     LRS_SERVER_URL = os.getenv('LRS_SERVER_URL')
     LRS_AUTH = os.getenv('LRS_AUTH')
-    LRS_CULTURE_VALUE = os.getenv('LRS_CULTURE_VALUE')
+    LRS_CULTURE_COMPETENCE = os.getenv('LRS_CULTURE_COMPETENCE')
 
     KAFKA_SERVER = os.getenv('KAFKA_SERVER')
 
@@ -17,6 +17,8 @@ class Settings:
 
     DP_SERVER_URL = os.getenv('DP_SERVER_URL')
     DP_SERVER_TOKEN = os.getenv('DP_SERVER_TOKEN')
+    DP_COMPETENCE_UUID = os.getenv('DP_COMPETENCE_UUID')
+    DP_CREATE_ENTRY = os.getenv('DP_CREATE_ENTRY')
 
 
 settings = Settings()
