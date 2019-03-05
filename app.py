@@ -11,6 +11,7 @@ from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from checks.dp import DPCheck
 from checks.fs import FSKafkaCheck, get_fs_messages, FSCheck
 from checks.lrs import LrsKafkaCheck, LrsResponseCheck, create_lrs
+from checks.postgres import PostgresResponseCheck
 from settings import settings
 
 sentry_sdk.init(
@@ -27,6 +28,13 @@ async def run_check(f: Callable, **kwargs):
         capture_exception(e)
         return False
 
+async def db_healthcheck(_):
+    result = await PostgresResponseCheck(
+        settings.DB_HOST, settings.DB_PORT, settings.DB_NAME, settings.DB_USER,  settings.DB_PASSWORD
+    ).check()
+    status = 200 if result else 500
+
+    return web.Response(status=status)
 
 async def healthcheck(_):
     
@@ -71,5 +79,8 @@ async def healthcheck(_):
 
 def init_func():
     app = web.Application()
-    app.add_routes([web.get('/healthcheck', healthcheck)])
+    app.add_routes([
+        web.get('/healthcheck', healthcheck),
+        web.get('/healthcheck/db', db_healthcheck),
+    ])
     return app
